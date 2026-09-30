@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>Farmer Weather Assistant</title>
+
+
+    <style>
+
+        * {
+            box-sizing: border-box;
+        }
+
+
+        body {
+
+            font-family: Arial, sans-serif;
+
+            margin: 0;
+
+            padding: 20px;
+
+            background: #f4f7f4;
+        }
+
+
+        .container {
+
+            max-width: 900px;
+
+            margin: auto;
+        }
+
+
+        h1 {
+
+            text-align: center;
+        }
+
+
+        button {
+
+            display: block;
+
+            margin: 20px auto;
+
+            padding: 12px 25px;
+
+            font-size: 16px;
+
+            cursor: pointer;
+        }
+
+
+        .box {
+
+            background: white;
+
+            padding: 20px;
+
+            margin-top: 20px;
+
+            border-radius: 10px;
+        }
+
+
+        .summary {
+
+            line-height: 1.7;
+
+            white-space: pre-wrap;
+        }
+
+
+        .daily {
+
+            display: grid;
+
+            grid-template-columns:
+                repeat(4, 1fr);
+
+            gap: 10px;
+        }
+
+
+        .daily-item {
+
+            padding: 15px;
+
+            background: #eef5ee;
+
+            border-radius: 8px;
+
+            text-align: center;
+        }
+
+
+        .hourly {
+
+            display: grid;
+
+            gap: 10px;
+        }
+
+
+        .hour {
+
+            display: grid;
+
+            grid-template-columns:
+                1.5fr repeat(5, 1fr);
+
+            padding: 12px;
+
+            background: #f5f5f5;
+
+            border-radius: 6px;
+
+            align-items: center;
+        }
+
+
+        .error {
+
+            color: red;
+
+            text-align: center;
+        }
+
+
+        @media (max-width: 700px) {
+
+            .daily {
+
+                grid-template-columns:
+                    repeat(2, 1fr);
+            }
+
+
+            .hour {
+
+                grid-template-columns: 1fr;
+
+                gap: 5px;
+            }
+
+        }
+
+    </style>
+
+</head>
+
+
+<body>
+
+
+<div class="container">
+
+
+    <h1>
+        🌾 Farmer Weather Assistant
+    </h1>
+
+
+    <button onclick="getWeather()">
+
+        Get Today's Weather
+
+    </button>
+
+
+    <!-- ========================= -->
+    <!-- TODAY'S SUMMARY -->
+    <!-- ========================= -->
+
+    <div class="box">
+
+        <h2>
+            🌦️ Today's Summary
+        </h2>
+
+
+        <div
+            id="summary"
+            class="summary"
+        >
+
+            Click the button to get today's weather.
+
+        </div>
+
+    </div>
+
+
+    <!-- ========================= -->
+    <!-- TODAY'S WEATHER -->
+    <!-- ========================= -->
+
+    <div class="box">
+
+        <h2>
+            📊 Today's Weather
+        </h2>
+
+
+        <div class="daily">
+
+
+            <div class="daily-item">
+
+                <strong>
+                    Rain Probability
+                </strong>
+
+                <p id="rainProbability">
+                    --
+                </p>
+
+            </div>
+
+
+            <div class="daily-item">
+
+                <strong>
+                    Expected Rain
+                </strong>
+
+                <p id="rainMm">
+                    --
+                </p>
+
+            </div>
+
+
+            <div class="daily-item">
+
+                <strong>
+                    Max Temperature
+                </strong>
+
+                <p id="maxTemp">
+                    --
+                </p>
+
+            </div>
+
+
+            <div class="daily-item">
+
+                <strong>
+                    Min Temperature
+                </strong>
+
+                <p id="minTemp">
+                    --
+                </p>
+
+            </div>
+
+
+        </div>
+
+    </div>
+
+
+    <!-- ========================= -->
+    <!-- HOURLY WEATHER -->
+    <!-- ========================= -->
+
+    <div class="box">
+
+        <h2>
+            🕐 Hourly Weather
+        </h2>
+
+
+        <div
+            id="hourly"
+            class="hourly"
+        >
+
+            <p>
+                Hourly information will appear here.
+            </p>
+
+        </div>
+
+    </div>
+
+
+    <div
+        id="error"
+        class="error"
+    >
+    </div>
+
+
+</div>
+
+
+<script>
+
+
+async function getWeather() {
+
+
+    const summary =
+        document.getElementById(
+            "summary"
+        );
+
+
+    const hourlyDiv =
+        document.getElementById(
+            "hourly"
+        );
+
+
+    const errorDiv =
+        document.getElementById(
+            "error"
+        );
+
+
+    try {
+
+
+        errorDiv.innerText = "";
+
+
+        summary.innerText =
+            "Loading weather...";
+
+
+        hourlyDiv.innerHTML =
+            "<p>Loading hourly weather...</p>";
+
+
+        // =========================
+        // CALL FLASK
+        // =========================
+
+        const response =
+            await fetch("/weather");
+
+
+        if (!response.ok) {
+
+            throw new Error(
+                "Failed to fetch weather"
+            );
+
+        }
+
+
+        const data =
+            await response.json();
+
+
+        // =========================
+        // ERROR FROM BACKEND
+        // =========================
+
+        if (data.error) {
+
+            throw new Error(
+                data.error
+            );
+
+        }
+
+
+        // =========================
+        // TODAY
+        // =========================
+
+        const today =
+            data.today;
+
+
+        document.getElementById(
+            "rainProbability"
+        ).innerText =
+
+            today.rain_probability
+            + "%";
+
+
+        document.getElementById(
+            "rainMm"
+        ).innerText =
+
+            today.rain_mm
+            + " mm";
+
+
+        document.getElementById(
+            "maxTemp"
+        ).innerText =
+
+            today.max_temperature
+            + " °C";
+
+
+        document.getElementById(
+            "minTemp"
+        ).innerText =
+
+            today.min_temperature
+            + " °C";
+
+
+        // =========================
+        // GEMINI SUMMARY
+        // =========================
+
+        summary.innerText = data.summary;
+
+        // =========================
+        // HOURLY
+        // =========================
+
+        hourlyDiv.innerHTML = "";
+
+
+        data.hourly.forEach(
+            hour => {
+
+
+                const hourDiv =
+                    document.createElement(
+                        "div"
+                    );
+
+
+                hourDiv.className =
+                    "hour";
+
+
+                hourDiv.innerHTML = `
+
+                    <strong>
+                        ${formatTime(hour.time)}
+                    </strong>
+
+                    <span>
+                        🌡️ ${hour.temperature}°C
+                    </span>
+
+                    <span>
+                        🌧️ ${hour.rain_probability}%
+                    </span>
+
+                    <span>
+                        💧 ${hour.humidity}%
+                    </span>
+
+                    <span>
+                        💨 ${hour.wind_speed} km/h
+                    </span>
+
+                    <span>
+                        🌧️ ${hour.rain_mm} mm
+                    </span>
+
+                `;
+
+
+                hourlyDiv.appendChild(
+                    hourDiv
+                );
+
+            }
+        );
+
+
+    }
+
+
+    catch (error) {
+
+
+        console.error(error);
+
+
+        errorDiv.innerText =
+            "Unable to fetch weather. Please try again.";
+
+
+        summary.innerText = "";
+
+
+        hourlyDiv.innerHTML = "";
+
+
+    }
+
+}
+
+
+// =========================
+// TIME FORMAT
+// =========================
+
+function formatTime(
+    timeString
+) {
+
+
+    const date =
+        new Date(timeString);
+
+
+    return date.toLocaleTimeString(
+        [],
+        {
+
+            hour: "2-digit",
+
+            minute: "2-digit"
+
+        }
+    );
+
+}
+
+
+</script>
+
+
+</body>
+
+</html>
